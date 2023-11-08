@@ -2,10 +2,10 @@ import { Construct } from "constructs";
 import { App, TerraformOutput, TerraformStack } from "cdktf";
 import { ArchiveProvider } from "./.gen/providers/archive/provider";
 import { RandomProvider } from "./.gen/providers/random/provider";
-import { DataGoogleBillingAccount } from "./.gen/providers/google-beta/data-google-billing-account";
+// import { DataGoogleBillingAccount } from "./.gen/providers/google-beta/data-google-billing-account";
 
 import { GoogleBetaProvider } from "./.gen/providers/google-beta/provider/index";
-import { GoogleProject } from "./.gen/providers/google-beta/google-project";
+// import { GoogleProject } from "./.gen/providers/google-beta/google-project";
 import { CloudFunctionDeploymentConstruct } from "./components/cloud-function-deployment-construct";
 import { CloudFunctionConstruct } from "./components/cloud-function-construct";
 
@@ -25,24 +25,25 @@ class PyTestRunnerStack extends TerraformStack {
 
     const googleBetaProvider = new GoogleBetaProvider(this, "google", {
       region: process.env.REGION!,
+      project: projectId, // Use the existing projectId directly
     });
     const archiveProvider = new ArchiveProvider(this, "archive", {});
     const randomProvider = new RandomProvider(this, "random", {});
 
-    const billingAccount = new DataGoogleBillingAccount(this, "billing-account", {
-      billingAccount: process.env.BillING_ACCOUNT!,
-    });
+    // const billingAccount = new DataGoogleBillingAccount(this, "billing-account", {
+    //   billingAccount: process.env.BillING_ACCOUNT!,
+    // });
 
-    const project = new GoogleProject(this, "project", {
-      projectId: projectId,
-      name: projectId,
-      billingAccount: billingAccount.id,
-      skipDelete: false
-    });
+    // const project = new GoogleProject(this, "project", {
+    //   projectId: projectId,
+    //   name: projectId,
+    //   billingAccount: billingAccount.id,
+    //   skipDelete: false
+    // });
 
     const cloudFunctionDeploymentConstruct =
       new CloudFunctionDeploymentConstruct(this, "cloud-function-deployment", {
-        project: project.projectId,
+        project: projectId, // Use the existing projectId directly
         region: process.env.REGION!,
         archiveProvider: archiveProvider,
         randomProvider: randomProvider,
@@ -58,11 +59,12 @@ class PyTestRunnerStack extends TerraformStack {
       timeout: 600,
       availableMemory: "512Mi",
       makePublic: false,
-      cloudFunctionDeploymentConstruct: cloudFunctionDeploymentConstruct,      
+      cloudFunctionDeploymentConstruct: cloudFunctionDeploymentConstruct,
     });
 
     await DatastoreConstruct.create(this, " pytestrunnerDatastore", {
-      project: project.projectId,
+      // project: project.projectId,
+      project: projectId,
       servicesAccount: pytestrunnerCloudFunctionConstruct.serviceAccount,
     });
 
@@ -77,11 +79,23 @@ class PyTestRunnerStack extends TerraformStack {
       serviceAccount: pytestrunnerCloudFunctionConstruct.serviceAccount,
     });
 
+    const vertexaiCloudFunctionConstruct = await CloudFunctionConstruct.create(this, "vertexaiCloudFunctionConstruct", {
+      functionName: "vertexai",
+      runtime: "python311",
+      entryPoint: "vertexai",
+      timeout: 600,
+      availableMemory: "512Mi",
+      makePublic: false,
+      cloudFunctionDeploymentConstruct: cloudFunctionDeploymentConstruct,
+      serviceAccount: pytestrunnerCloudFunctionConstruct.serviceAccount,
+    });
+
     const apigatewayConstruct = await ApigatewayConstruct.create(this, "api-gateway", {
       api: "pytestrunnerapi",
-      project: project.projectId,
+      // project: project.projectId,
+      project: projectId,
       provider: googleBetaProvider,
-      replaces: { "GRADER": pytestrunnerCloudFunctionConstruct.cloudFunction.url, "TEST_RESULTS": testResultsCloudFunctionConstruct.cloudFunction.url },
+      replaces: { "GRADER": pytestrunnerCloudFunctionConstruct.cloudFunction.url, "TEST_RESULTS": testResultsCloudFunctionConstruct.cloudFunction.url, "VERTEXAI_REWRITER": vertexaiCloudFunctionConstruct.cloudFunction.url },
       servicesAccount: pytestrunnerCloudFunctionConstruct.serviceAccount,
     });
 
