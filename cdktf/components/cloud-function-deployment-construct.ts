@@ -1,7 +1,7 @@
 import { Construct } from "constructs";
 
 import { ArchiveProvider } from "../.gen/providers/archive/provider";
-import { GoogleAppEngineApplication } from "../.gen/providers/google-beta/google-app-engine-application";
+// import { GoogleAppEngineApplication } from "../.gen/providers/google-beta/google-app-engine-application";
 import { GoogleProjectService } from "../.gen/providers/google-beta/google-project-service";
 import { GoogleStorageBucket } from "../.gen/providers/google-beta/google-storage-bucket";
 import { RandomProvider } from "../.gen/providers/random/provider";
@@ -79,11 +79,11 @@ export class CloudFunctionDeploymentConstruct extends Construct {
 
         // This is a hack to enable datastore API for the project
         // https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/datastore_index
-        new GoogleAppEngineApplication(this, "app-engine-application", {
-            locationId: props.region,
-            project: props.project,
-            databaseType: "CLOUD_DATASTORE_COMPATIBILITY",
-            dependsOn: this.services
-        });
+        // new GoogleAppEngineApplication(this, "app-engine-application", {
+        //     locationId: props.region,
+        //     project: props.project,
+        //     databaseType: "CLOUD_DATASTORE_COMPATIBILITY",
+        //     dependsOn: this.services
+        // });
     }
 }

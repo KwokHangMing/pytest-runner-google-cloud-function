@@ -79,23 +79,24 @@ class PyTestRunnerStack extends TerraformStack {
       serviceAccount: pytestrunnerCloudFunctionConstruct.serviceAccount,
     });
 
-    const vertexaiCloudFunctionConstruct = await CloudFunctionConstruct.create(this, "vertexaiCloudFunctionConstruct", {
-      functionName: "vertexai",
-      runtime: "python311",
-      entryPoint: "vertexai",
-      timeout: 600,
-      availableMemory: "512Mi",
-      makePublic: false,
-      cloudFunctionDeploymentConstruct: cloudFunctionDeploymentConstruct,
-      serviceAccount: pytestrunnerCloudFunctionConstruct.serviceAccount,
-    });
+    // const vertexairewriterCloudFunctionConstruct = await CloudFunctionConstruct.create(this, "vertexairewriterCloudFunctionConstruct", {
+    //   functionName: "vertexairewriter",
+    //   runtime: "python311",
+    //   entryPoint: "vertexairewriter",
+    //   timeout: 600,
+    //   availableMemory: "512Mi",
+    //   makePublic: false,
+    //   cloudFunctionDeploymentConstruct: cloudFunctionDeploymentConstruct,
+    //   serviceAccount: pytestrunnerCloudFunctionConstruct.serviceAccount,
+    // });
 
     const apigatewayConstruct = await ApigatewayConstruct.create(this, "api-gateway", {
       api: "pytestrunnerapi",
       // project: project.projectId,
       project: projectId,
       provider: googleBetaProvider,
-      replaces: { "GRADER": pytestrunnerCloudFunctionConstruct.cloudFunction.url, "TEST_RESULTS": testResultsCloudFunctionConstruct.cloudFunction.url, "VERTEXAI_REWRITER": vertexaiCloudFunctionConstruct.cloudFunction.url },
+      // replaces: { "GRADER": pytestrunnerCloudFunctionConstruct.cloudFunction.url, "TEST_RESULTS": testResultsCloudFunctionConstruct.cloudFunction.url, "VERTEXAI_REWRITER": vertexairewriterCloudFunctionConstruct.cloudFunction.url },
+      replaces: { "GRADER": pytestrunnerCloudFunctionConstruct.cloudFunction.url, "TEST_RESULTS": testResultsCloudFunctionConstruct.cloudFunction.url},
       servicesAccount: pytestrunnerCloudFunctionConstruct.serviceAccount,
     });
 
